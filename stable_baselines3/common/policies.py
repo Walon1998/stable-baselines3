@@ -153,13 +153,16 @@ class BaseModel(nn.Module, ABC):
             return param.device
         return get_device("cpu")
 
-    def save(self, path: str) -> None:
+    def save(self, path: str, optimizer=None) -> None:
         """
         Save model to a given location.
 
         :param path:
         """
-        th.save({"state_dict": self.state_dict(), "data": self._get_constructor_parameters()}, path)
+        if optimizer is None:
+            th.save({"state_dict": self.state_dict(), "data": self._get_constructor_parameters()}, path)
+        else:
+            th.save({"state_dict": self.state_dict(), "data": self._get_constructor_parameters(), 'optimizer_state_dict': optimizer.state_dict()}, path)
 
     @classmethod
     def load(cls, path: str, device: Union[th.device, str] = "auto") -> "BaseModel":
