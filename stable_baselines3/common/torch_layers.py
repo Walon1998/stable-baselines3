@@ -181,7 +181,6 @@ class MlpExtractor(nn.Module):
             if isinstance(layer, int):  # Check that this is a shared layer
                 # TODO: give layer a meaningful name
                 shared_net.append(nn.Linear(last_layer_dim_shared, layer))  # add linear of size layer
-                shared_net.append(nn.Dropout())
                 shared_net.append(activation_fn())
                 last_layer_dim_shared = layer
             else:
@@ -203,14 +202,12 @@ class MlpExtractor(nn.Module):
             if pi_layer_size is not None:
                 assert isinstance(pi_layer_size, int), "Error: net_arch[-1]['pi'] must only contain integers."
                 policy_net.append(nn.Linear(last_layer_dim_pi, pi_layer_size))
-                policy_net.append(nn.Dropout())
                 policy_net.append(activation_fn())
                 last_layer_dim_pi = pi_layer_size
 
             if vf_layer_size is not None:
                 assert isinstance(vf_layer_size, int), "Error: net_arch[-1]['vf'] must only contain integers."
                 value_net.append(nn.Linear(last_layer_dim_vf, vf_layer_size))
-                value_net.append(nn.Dropout())
                 value_net.append(activation_fn())
                 last_layer_dim_vf = vf_layer_size
 
