@@ -153,7 +153,7 @@ class BaseModel(nn.Module, ABC):
             return param.device
         return get_device("cpu")
 
-    def save(self, path: str, optimizer=None) -> None:
+    def save(self, path: str, optimizer=None, experiment_key=None, step=None) -> None:
         """
         Save model to a given location.
 
@@ -162,7 +162,7 @@ class BaseModel(nn.Module, ABC):
         if optimizer is None:
             th.save({"state_dict": self.state_dict(), "data": self._get_constructor_parameters()}, path)
         else:
-            th.save({"state_dict": self.state_dict(), "data": self._get_constructor_parameters(), 'optimizer_state_dict': optimizer.state_dict()}, path)
+            th.save({"state_dict": self.state_dict(), "data": self._get_constructor_parameters(), 'optimizer_state_dict': optimizer.state_dict(), 'experiment_key': experiment_key, 'step': step}, path)
 
     @classmethod
     def load(cls, path: str, device: Union[th.device, str] = "auto") -> "BaseModel":
@@ -189,7 +189,11 @@ class BaseModel(nn.Module, ABC):
         # Load weights
         model.load_state_dict(saved_variables["state_dict"], strict=False)
         model.to(device)
-        return model
+
+        if 'optimizer_state_dict' in saved_variables:
+            return model, saved_variables["optimizer_state_dict"], saved_variables["experiment_key"], saved_variables["step"]
+        else:
+            return model
 
     def load_from_vector(self, vector: np.ndarray) -> None:
         """
