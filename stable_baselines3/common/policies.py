@@ -625,8 +625,7 @@ class ActorCriticPolicy(BasePolicy):
         :return: Action distribution
         """
         mean_actions = self.action_net(latent_pi)
-
-        assert obs.size(1) == 118
+        assert obs.size(1) == 159
         assert mean_actions.size(1) == 22
 
         has_boost = obs[:, 13] > 0.0

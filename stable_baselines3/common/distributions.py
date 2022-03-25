@@ -319,7 +319,7 @@ class MultiCategoricalDistribution(Distribution):
         :return:
         """
 
-        action_logits = nn.Linear(latent_dim, sum(self.action_dims))
+        action_logits = nn.Linear(latent_dim, int(sum(self.action_dims)))
         return action_logits
 
     def proba_distribution(self, action_logits: th.Tensor) -> "MultiCategoricalDistribution":
