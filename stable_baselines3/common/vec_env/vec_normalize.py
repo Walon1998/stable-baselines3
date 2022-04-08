@@ -54,6 +54,8 @@ class VecNormalize(VecEnvWrapper):
             else:
                 self.obs_spaces = None
                 self.obs_rms = RunningMeanStd(shape=self.observation_space.shape)
+        else:
+            self.obs_rms = None
 
         self.ret_rms = RunningMeanStd(shape=())
         self.clip_obs = clip_obs
