@@ -624,8 +624,9 @@ class ActorCriticPolicy(BasePolicy):
         :param latent_pi: Latent code for the actor
         :return: Action distribution
         """
+        mean_actions = self.action_net(latent_pi)
+
         if obs is not None:
-            mean_actions = self.action_net(latent_pi)
             assert obs.size(1) == 159
             assert mean_actions.size(1) == 22
 
