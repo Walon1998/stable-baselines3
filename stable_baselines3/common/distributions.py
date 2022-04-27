@@ -222,7 +222,7 @@ class SquashedDiagGaussianDistribution(DiagGaussianDistribution):
         log_prob = super(SquashedDiagGaussianDistribution, self).log_prob(gaussian_actions)
         # Squash correction (from original SAC implementation)
         # this comes from the fact that tanh is bijective and differentiable
-        log_prob -= th.sum(th.log(1 - actions**2 + self.epsilon), dim=1)
+        log_prob -= th.sum(th.log(1 - actions ** 2 + self.epsilon), dim=1)
         return log_prob
 
     def entropy(self) -> Optional[th.Tensor]:
@@ -323,7 +323,7 @@ class MultiCategoricalDistribution(Distribution):
         return action_logits
 
     def proba_distribution(self, action_logits: th.Tensor) -> "MultiCategoricalDistribution":
-        self.distribution = [Categorical(logits=split) for split in th.split(action_logits, tuple(self.action_dims), dim=1)]
+        self.distribution = [Categorical(logits=split, validate_args=False) for split in th.split(action_logits, tuple(self.action_dims), dim=1)]
         return self
 
     def log_prob(self, actions: th.Tensor) -> th.Tensor:
@@ -425,13 +425,13 @@ class StateDependentNoiseDistribution(Distribution):
     """
 
     def __init__(
-        self,
-        action_dim: int,
-        full_std: bool = True,
-        use_expln: bool = False,
-        squash_output: bool = False,
-        learn_features: bool = False,
-        epsilon: float = 1e-6,
+            self,
+            action_dim: int,
+            full_std: bool = True,
+            use_expln: bool = False,
+            squash_output: bool = False,
+            learn_features: bool = False,
+            epsilon: float = 1e-6,
     ):
         super(StateDependentNoiseDistribution, self).__init__()
         self.action_dim = action_dim
@@ -492,7 +492,7 @@ class StateDependentNoiseDistribution(Distribution):
         self.exploration_matrices = self.weights_dist.rsample((batch_size,))
 
     def proba_distribution_net(
-        self, latent_dim: int, log_std_init: float = -2.0, latent_sde_dim: Optional[int] = None
+            self, latent_dim: int, log_std_init: float = -2.0, latent_sde_dim: Optional[int] = None
     ) -> Tuple[nn.Module, nn.Parameter]:
         """
         Create the layers and parameter that represent the distribution:
@@ -519,7 +519,7 @@ class StateDependentNoiseDistribution(Distribution):
         return mean_actions_net, log_std
 
     def proba_distribution(
-        self, mean_actions: th.Tensor, log_std: th.Tensor, latent_sde: th.Tensor
+            self, mean_actions: th.Tensor, log_std: th.Tensor, latent_sde: th.Tensor
     ) -> "StateDependentNoiseDistribution":
         """
         Create the distribution given its parameters (mean, std)
@@ -531,7 +531,7 @@ class StateDependentNoiseDistribution(Distribution):
         """
         # Stop gradient if we don't want to influence the features
         self._latent_sde = latent_sde if self.learn_features else latent_sde.detach()
-        variance = th.mm(self._latent_sde**2, self.get_std(log_std) ** 2)
+        variance = th.mm(self._latent_sde ** 2, self.get_std(log_std) ** 2)
         self.distribution = Normal(mean_actions, th.sqrt(variance + self.epsilon))
         return self
 
@@ -583,14 +583,14 @@ class StateDependentNoiseDistribution(Distribution):
         return noise.squeeze(1)
 
     def actions_from_params(
-        self, mean_actions: th.Tensor, log_std: th.Tensor, latent_sde: th.Tensor, deterministic: bool = False
+            self, mean_actions: th.Tensor, log_std: th.Tensor, latent_sde: th.Tensor, deterministic: bool = False
     ) -> th.Tensor:
         # Update the proba distribution
         self.proba_distribution(mean_actions, log_std, latent_sde)
         return self.get_actions(deterministic=deterministic)
 
     def log_prob_from_params(
-        self, mean_actions: th.Tensor, log_std: th.Tensor, latent_sde: th.Tensor
+            self, mean_actions: th.Tensor, log_std: th.Tensor, latent_sde: th.Tensor
     ) -> Tuple[th.Tensor, th.Tensor]:
         actions = self.actions_from_params(mean_actions, log_std, latent_sde)
         log_prob = self.log_prob(actions)
@@ -642,7 +642,7 @@ class TanhBijector(object):
 
 
 def make_proba_distribution(
-    action_space: gym.spaces.Space, use_sde: bool = False, dist_kwargs: Optional[Dict[str, Any]] = None
+        action_space: gym.spaces.Space, use_sde: bool = False, dist_kwargs: Optional[Dict[str, Any]] = None
 ) -> Distribution:
     """
     Return an instance of Distribution for the correct type of action space
