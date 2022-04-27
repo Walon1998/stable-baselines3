@@ -22,6 +22,7 @@ def _worker(
 
     parent_remote.close()
     env = env_fn_wrapper.var()
+    env.init_non_pickle()
     while True:
         try:
             cmd, data = remote.recv()
