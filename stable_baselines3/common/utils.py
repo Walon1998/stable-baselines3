@@ -171,10 +171,10 @@ def get_latest_run_id(log_path: Optional[str] = None, log_name: str = "") -> int
 
 
 def configure_logger(
-    verbose: int = 0,
-    tensorboard_log: Optional[str] = None,
-    tb_log_name: str = "",
-    reset_num_timesteps: bool = True,
+        verbose: int = 0,
+        tensorboard_log: Optional[str] = None,
+        tb_log_name: str = "",
+        reset_num_timesteps: bool = True,
 ) -> Logger:
     """
     Configure the logger's outputs.
@@ -408,9 +408,9 @@ def zip_strict(*iterables: Iterable) -> Iterable:
 
 
 def polyak_update(
-    params: Iterable[th.nn.Parameter],
-    target_params: Iterable[th.nn.Parameter],
-    tau: float,
+        params: Iterable[th.nn.Parameter],
+        target_params: Iterable[th.nn.Parameter],
+        tau: float,
 ) -> None:
     """
     Perform a Polyak average update on ``target_params`` using ``params``:
@@ -435,7 +435,7 @@ def polyak_update(
 
 
 def obs_as_tensor(
-    obs: Union[np.ndarray, Dict[Union[str, int], np.ndarray]], device: th.device
+        obs: Union[np.ndarray, Dict[Union[str, int], np.ndarray]], device: th.device
 ) -> Union[th.Tensor, TensorDict]:
     """
     Moves the observation to the given device.
@@ -445,17 +445,17 @@ def obs_as_tensor(
     :return: PyTorch tensor of the observation on a desired device.
     """
     if isinstance(obs, np.ndarray):
-        return th.as_tensor(obs).to(device)
+        return th.as_tensor(obs, device=device)
     elif isinstance(obs, dict):
-        return {key: th.as_tensor(_obs).to(device) for (key, _obs) in obs.items()}
+        return {key: th.as_tensor(_obs, device=device) for (key, _obs) in obs.items()}
     else:
         raise Exception(f"Unrecognized type of observation {type(obs)}")
 
 
 def should_collect_more_steps(
-    train_freq: TrainFreq,
-    num_collected_steps: int,
-    num_collected_episodes: int,
+        train_freq: TrainFreq,
+        num_collected_steps: int,
+        num_collected_episodes: int,
 ) -> bool:
     """
     Helper used in ``collect_rollouts()`` of off-policy algorithms
