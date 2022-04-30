@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 import gym
 import numpy as np
+import torch
 import torch as th
 from torch import nn
 
@@ -488,6 +489,7 @@ class ActorCriticPolicy(BasePolicy):
 
         # Action distribution
         self.action_dist = make_proba_distribution(action_space, use_sde=use_sde, dist_kwargs=dist_kwargs)
+        self.HUGE_NEG = th.tensor(-1e8, dtype=torch.float32).to(self.device, non_blocking=True)
 
         self._build(lr_schedule)
 
@@ -661,9 +663,7 @@ class ActorCriticPolicy(BasePolicy):
 
             mask[:, 21] = on_ground  # Handbrake
 
-            HUGE_NEG = th.tensor(-1e8, dtype=mean_actions.dtype, device=self.device)
-
-            mean_actions = th.where(mask, mean_actions, HUGE_NEG)
+            mean_actions = th.where(mask, mean_actions, self.HUGE_NEG)
 
         if isinstance(self.action_dist, DiagGaussianDistribution):
             return self.action_dist.proba_distribution(mean_actions, self.log_std)
