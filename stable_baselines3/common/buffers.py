@@ -429,8 +429,8 @@ class RolloutBuffer(BaseBuffer):
         self.actions[self.pos] = np.array(action).copy()
         self.rewards[self.pos] = np.array(reward).copy()
         self.episode_starts[self.pos] = np.array(episode_start).copy()
-        self.values[self.pos] = value.numpy().flatten()
-        self.log_probs[self.pos] = log_prob.numpy().reshape(-1, )
+        self.values[self.pos] = value.flatten()
+        self.log_probs[self.pos] = log_prob.reshape(-1, )
         self.pos += 1
         if self.pos == self.buffer_size:
             self.full = True
