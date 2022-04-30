@@ -35,12 +35,12 @@ class BaseBuffer(ABC):
     """
 
     def __init__(
-            self,
-            buffer_size: int,
-            observation_space: spaces.Space,
-            action_space: spaces.Space,
-            device: Union[th.device, str] = "cpu",
-            n_envs: int = 1,
+        self,
+        buffer_size: int,
+        observation_space: spaces.Space,
+        action_space: spaces.Space,
+        device: Union[th.device, str] = "cpu",
+        n_envs: int = 1,
     ):
         super(BaseBuffer, self).__init__()
         self.buffer_size = buffer_size
@@ -111,7 +111,7 @@ class BaseBuffer(ABC):
 
     @abstractmethod
     def _get_samples(
-            self, batch_inds: np.ndarray, env: Optional[VecNormalize] = None
+        self, batch_inds: np.ndarray, env: Optional[VecNormalize] = None
     ) -> Union[ReplayBufferSamples, RolloutBufferSamples]:
         """
         :param batch_inds:
@@ -136,8 +136,8 @@ class BaseBuffer(ABC):
 
     @staticmethod
     def _normalize_obs(
-            obs: Union[np.ndarray, Dict[str, np.ndarray]],
-            env: Optional[VecNormalize] = None,
+        obs: Union[np.ndarray, Dict[str, np.ndarray]],
+        env: Optional[VecNormalize] = None,
     ) -> Union[np.ndarray, Dict[str, np.ndarray]]:
         if env is not None:
             return env.normalize_obs(obs)
@@ -170,14 +170,14 @@ class ReplayBuffer(BaseBuffer):
     """
 
     def __init__(
-            self,
-            buffer_size: int,
-            observation_space: spaces.Space,
-            action_space: spaces.Space,
-            device: Union[th.device, str] = "cpu",
-            n_envs: int = 1,
-            optimize_memory_usage: bool = False,
-            handle_timeout_termination: bool = True,
+        self,
+        buffer_size: int,
+        observation_space: spaces.Space,
+        action_space: spaces.Space,
+        device: Union[th.device, str] = "cpu",
+        n_envs: int = 1,
+        optimize_memory_usage: bool = False,
+        handle_timeout_termination: bool = True,
     ):
         super(ReplayBuffer, self).__init__(buffer_size, observation_space, action_space, device, n_envs=n_envs)
 
@@ -223,13 +223,13 @@ class ReplayBuffer(BaseBuffer):
                 )
 
     def add(
-            self,
-            obs: np.ndarray,
-            next_obs: np.ndarray,
-            action: np.ndarray,
-            reward: np.ndarray,
-            done: np.ndarray,
-            infos: List[Dict[str, Any]],
+        self,
+        obs: np.ndarray,
+        next_obs: np.ndarray,
+        action: np.ndarray,
+        reward: np.ndarray,
+        done: np.ndarray,
+        infos: List[Dict[str, Any]],
     ) -> None:
 
         # Reshape needed when using multiple envs with discrete observations
@@ -329,14 +329,14 @@ class RolloutBuffer(BaseBuffer):
     """
 
     def __init__(
-            self,
-            buffer_size: int,
-            observation_space: spaces.Space,
-            action_space: spaces.Space,
-            device: Union[th.device, str] = "cpu",
-            gae_lambda: float = 1,
-            gamma: float = 0.99,
-            n_envs: int = 1,
+        self,
+        buffer_size: int,
+        observation_space: spaces.Space,
+        action_space: spaces.Space,
+        device: Union[th.device, str] = "cpu",
+        gae_lambda: float = 1,
+        gamma: float = 0.99,
+        n_envs: int = 1,
     ):
 
         super(RolloutBuffer, self).__init__(buffer_size, observation_space, action_space, device, n_envs=n_envs)
@@ -398,13 +398,13 @@ class RolloutBuffer(BaseBuffer):
         self.returns = self.advantages + self.values
 
     def add(
-            self,
-            obs: np.ndarray,
-            action: np.ndarray,
-            reward: np.ndarray,
-            episode_start: np.ndarray,
-            value: th.Tensor,
-            log_prob: th.Tensor,
+        self,
+        obs: np.ndarray,
+        action: np.ndarray,
+        reward: np.ndarray,
+        episode_start: np.ndarray,
+        value: th.Tensor,
+        log_prob: th.Tensor,
     ) -> None:
         """
         :param obs: Observation
@@ -425,12 +425,12 @@ class RolloutBuffer(BaseBuffer):
         if isinstance(self.observation_space, spaces.Discrete):
             obs = obs.reshape((self.n_envs,) + self.obs_shape)
 
-        self.observations[self.pos] = np.array(obs, dtype=np.float32)
-        self.actions[self.pos] = np.array(action, dtype=np.float32)
-        self.rewards[self.pos] = np.array(reward, dtype=np.float32)
-        self.episode_starts[self.pos] = np.array(episode_start, dtype=np.float32)
-        self.values[self.pos] = value.cpu().numpy().flatten()
-        self.log_probs[self.pos] = log_prob.cpu().numpy()
+        self.observations[self.pos] = np.array(obs).copy()
+        self.actions[self.pos] = np.array(action).copy()
+        self.rewards[self.pos] = np.array(reward).copy()
+        self.episode_starts[self.pos] = np.array(episode_start).copy()
+        self.values[self.pos] = value.clone().cpu().numpy().flatten()
+        self.log_probs[self.pos] = log_prob.clone().cpu().numpy()
         self.pos += 1
         if self.pos == self.buffer_size:
             self.full = True
@@ -460,7 +460,7 @@ class RolloutBuffer(BaseBuffer):
 
         start_idx = 0
         while start_idx < self.buffer_size * self.n_envs:
-            yield self._get_samples(indices[start_idx: start_idx + batch_size])
+            yield self._get_samples(indices[start_idx : start_idx + batch_size])
             start_idx += batch_size
 
     def _get_samples(self, batch_inds: np.ndarray, env: Optional[VecNormalize] = None) -> RolloutBufferSamples:
@@ -493,14 +493,14 @@ class DictReplayBuffer(ReplayBuffer):
     """
 
     def __init__(
-            self,
-            buffer_size: int,
-            observation_space: spaces.Space,
-            action_space: spaces.Space,
-            device: Union[th.device, str] = "cpu",
-            n_envs: int = 1,
-            optimize_memory_usage: bool = False,
-            handle_timeout_termination: bool = True,
+        self,
+        buffer_size: int,
+        observation_space: spaces.Space,
+        action_space: spaces.Space,
+        device: Union[th.device, str] = "cpu",
+        n_envs: int = 1,
+        optimize_memory_usage: bool = False,
+        handle_timeout_termination: bool = True,
     ):
         super(ReplayBuffer, self).__init__(buffer_size, observation_space, action_space, device, n_envs=n_envs)
 
@@ -556,13 +556,13 @@ class DictReplayBuffer(ReplayBuffer):
                 )
 
     def add(
-            self,
-            obs: Dict[str, np.ndarray],
-            next_obs: Dict[str, np.ndarray],
-            action: np.ndarray,
-            reward: np.ndarray,
-            done: np.ndarray,
-            infos: List[Dict[str, Any]],
+        self,
+        obs: Dict[str, np.ndarray],
+        next_obs: Dict[str, np.ndarray],
+        action: np.ndarray,
+        reward: np.ndarray,
+        done: np.ndarray,
+        infos: List[Dict[str, Any]],
     ) -> None:
         # Copy to avoid modification by reference
         for key in self.observations.keys():
@@ -657,14 +657,14 @@ class DictRolloutBuffer(RolloutBuffer):
     """
 
     def __init__(
-            self,
-            buffer_size: int,
-            observation_space: spaces.Space,
-            action_space: spaces.Space,
-            device: Union[th.device, str] = "cpu",
-            gae_lambda: float = 1,
-            gamma: float = 0.99,
-            n_envs: int = 1,
+        self,
+        buffer_size: int,
+        observation_space: spaces.Space,
+        action_space: spaces.Space,
+        device: Union[th.device, str] = "cpu",
+        gae_lambda: float = 1,
+        gamma: float = 0.99,
+        n_envs: int = 1,
     ):
 
         super(RolloutBuffer, self).__init__(buffer_size, observation_space, action_space, device, n_envs=n_envs)
@@ -694,13 +694,13 @@ class DictRolloutBuffer(RolloutBuffer):
         super(RolloutBuffer, self).reset()
 
     def add(
-            self,
-            obs: Dict[str, np.ndarray],
-            action: np.ndarray,
-            reward: np.ndarray,
-            episode_start: np.ndarray,
-            value: th.Tensor,
-            log_prob: th.Tensor,
+        self,
+        obs: Dict[str, np.ndarray],
+        action: np.ndarray,
+        reward: np.ndarray,
+        episode_start: np.ndarray,
+        value: th.Tensor,
+        log_prob: th.Tensor,
     ) -> None:
         """
         :param obs: Observation
@@ -754,7 +754,7 @@ class DictRolloutBuffer(RolloutBuffer):
 
         start_idx = 0
         while start_idx < self.buffer_size * self.n_envs:
-            yield self._get_samples(indices[start_idx: start_idx + batch_size])
+            yield self._get_samples(indices[start_idx : start_idx + batch_size])
             start_idx += batch_size
 
     def _get_samples(self, batch_inds: np.ndarray, env: Optional[VecNormalize] = None) -> DictRolloutBufferSamples:
