@@ -489,7 +489,7 @@ class ActorCriticPolicy(BasePolicy):
 
         # Action distribution
         self.action_dist = make_proba_distribution(action_space, use_sde=use_sde, dist_kwargs=dist_kwargs)
-        self.HUGE_NEG = th.tensor(-1e8, dtype=torch.float32).to(self.device, non_blocking=True)
+        self.HUGE_NEG = None
 
         self._build(lr_schedule)
 
@@ -627,6 +627,9 @@ class ActorCriticPolicy(BasePolicy):
         :return: Action distribution
         """
         mean_actions = self.action_net(latent_pi)
+
+        if self.HUGE_NEG is None:
+            self.HUGE_NEG = th.tensor(-1e8, dtype=torch.float32).to(self.device, non_blocking=True)
 
         if obs is not None:
             assert obs.size(1) == 159
