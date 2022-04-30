@@ -474,7 +474,7 @@ class StateDependentNoiseDistribution(Distribution):
         if self.full_std:
             return std
         # Reduce the number of parameters:
-        return th.ones(self.latent_sde_dim, self.action_dim, device=log_std.device) * std
+        return th.ones(self.latent_sde_dim, self.action_dim).to(log_std.device) * std
 
     def sample_weights(self, log_std: th.Tensor, batch_size: int = 1) -> None:
         """
