@@ -629,7 +629,7 @@ class ActorCriticPolicy(BasePolicy):
         mean_actions = self.action_net(latent_pi)
 
         if self.HUGE_NEG is None:
-            self.HUGE_NEG = th.tensor(-1e8, dtype=torch.float32).to(self.device, non_blocking=True)
+            self.HUGE_NEG = th.tensor(-1e8, dtype=torch.float32).to(self.device)
 
         if obs is not None:
             assert obs.size(1) == 159
