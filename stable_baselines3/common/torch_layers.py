@@ -195,7 +195,7 @@ class MlpExtractor(nn.Module):
                 break  # From here on the network splits up in policy and value network
 
         last_layer_dim_pi = last_layer_dim_shared
-        last_layer_dim_vf = last_layer_dim_shared
+        last_layer_dim_vf = 159
 
         # Build the non-shared part of the network
         for pi_layer_size, vf_layer_size in zip_longest(policy_only_layers, value_only_layers):
