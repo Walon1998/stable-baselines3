@@ -653,7 +653,7 @@ class ActorCriticPolicy(BasePolicy):
             mask[:, 0] = on_ground  # throttle -1
             # mask[:, 2] = on_ground  # throttle 1
 
-            mask[:, 6] = not_on_ground  # pitch -1
+            # mask[:, 6] = not_on_ground  # pitch -1
             # mask[:, 8] = not_on_ground  # pitch 1.0
 
             mask[:, 9] = not_on_ground  # roll -1
