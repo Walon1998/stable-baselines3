@@ -655,8 +655,8 @@ class ActorCriticPolicy(BasePolicy):
 
             mask[:, 8] = not_on_ground  # pitch -1
             mask[:, 9] = not_on_ground  # pitch -0.5
-            # mask[:, 11] = not_on_ground  # pitch 0.5
-            # mask[:, 12] = not_on_ground  # pitch 1.0
+            mask[:, 11] = not_on_ground  # pitch 0.5
+            mask[:, 12] = not_on_ground  # pitch 1.0
 
             mask[:, 13] = not_on_ground  # roll -1
             mask[:, 15] = not_on_ground  # roll 1
@@ -664,7 +664,7 @@ class ActorCriticPolicy(BasePolicy):
             mask[:, 17] = has_flip  # Jump
             mask[:, 19] = has_boost  # boost
 
-            # mask[:, 21] = on_ground  # Handbrake
+            mask[:, 21] = on_ground  # Handbrake
 
             mean_actions = th.where(mask, mean_actions, self.HUGE_NEG)
 
