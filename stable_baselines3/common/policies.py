@@ -676,7 +676,9 @@ class ActorCriticPolicy(BasePolicy):
             return self.action_dist.proba_distribution(action_logits=mean_actions)
         elif isinstance(self.action_dist, MultiCategoricalDistribution):
             # Here mean_actions are the flattened logits
-            return self.action_dist.proba_distribution(action_logits=mean_actions)
+            dist = self.action_dist.proba_distribution(action_logits=mean_actions)
+            dist.apply_mask(mask)
+            return dist
         elif isinstance(self.action_dist, BernoulliDistribution):
             # Here mean_actions are the logits (before rounding to get the binary actions)
             return self.action_dist.proba_distribution(action_logits=mean_actions)

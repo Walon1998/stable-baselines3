@@ -4,10 +4,12 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import gym
+import numpy as np
 import torch as th
 from gym import spaces
 from torch import nn
 from torch.distributions import Bernoulli, Categorical, Normal
+from torch.distributions.utils import logits_to_probs
 
 from stable_baselines3.common.preprocessing import get_action_dim
 
@@ -256,6 +258,7 @@ class CategoricalDistribution(Distribution):
     def __init__(self, action_dim: int):
         super(CategoricalDistribution, self).__init__()
         self.action_dim = action_dim
+        self.mask = None
 
     def proba_distribution_net(self, latent_dim: int) -> nn.Module:
         """
@@ -278,7 +281,12 @@ class CategoricalDistribution(Distribution):
         return self.distribution.log_prob(actions)
 
     def entropy(self) -> th.Tensor:
-        return self.distribution.entropy()
+        assert self.mask is not None
+
+        device = self.distribution.logits.device
+        p_log_p = self.distribution.logits * self.distribution.probs
+        p_log_p = th.where(self.mask, p_log_p, th.tensor(0.0, device=device))
+        return -p_log_p.sum(-1)
 
     def sample(self) -> th.Tensor:
         return self.distribution.sample()
@@ -350,6 +358,12 @@ class MultiCategoricalDistribution(Distribution):
         actions = self.actions_from_params(action_logits)
         log_prob = self.log_prob(actions)
         return actions, log_prob
+
+    def apply_mask(self, mask):
+        counter = 0
+        for split in th.split(mask, tuple(self.action_dims), dim=1):
+            self.distribution[counter].mask = split
+            counter += 1
 
 
 class BernoulliDistribution(Distribution):
