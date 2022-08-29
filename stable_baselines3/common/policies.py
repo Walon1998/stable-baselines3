@@ -639,7 +639,7 @@ class ActorCriticPolicy(BasePolicy):
             on_ground = obs[:, 14]
             has_flip = obs[:, 15]
 
-            not_on_ground = th.logical_not(on_ground)
+            in_air = th.logical_not(on_ground)
             mask = th.ones_like(mean_actions, dtype=th.bool)
 
             # mask[:, 0:3] = 1.0  # Throttle, always possible
@@ -650,23 +650,24 @@ class ActorCriticPolicy(BasePolicy):
             # mask[:, 18:20] = 1.0  # boost, boost > 0
             # mask[:, 20:22] = 1.0  # Handbrake, at least one wheel ground (not doable)
 
-            mask[:, 0] = on_ground  # throttle -1
+            # mask[:, 0] = on_ground  # throttle -1
             # mask[:, 2] = on_ground  # throttle 1
 
-            mask[:, 8] = not_on_ground  # pitch -1
-            mask[:, 9] = not_on_ground  # pitch -0.5
-            mask[:, 11] = not_on_ground  # pitch 0.5
-            mask[:, 12] = not_on_ground  # pitch 1.0
+            in_air = in_air.unsqueeze(1)
+            mask[:, 8:16] = in_air  # pitch + roll
 
-            mask[:, 13] = not_on_ground  # roll -1
-            mask[:, 15] = not_on_ground  # roll 1
+            has_flip = has_flip.unsqueeze(1)
+            mask[:, 16:18] = has_flip  # has flip
 
-            mask[:, 17] = has_flip  # Jump
-            mask[:, 19] = has_boost  # boost
+            has_boost = has_boost.unsqueeze(1)
+            mask[:, 18:20] = has_boost  # boost
 
-            mask[:, 21] = on_ground  # Handbrake
+            on_ground = on_ground.unsqueeze(1)
+            mask[:, 20:22] = on_ground  # Handbrake
 
             mean_actions = th.where(mask, mean_actions, self.HUGE_NEG)
+
+            # print(mean_actions[:, 8:13], mean_actions[:, 16:18])
 
         if isinstance(self.action_dist, DiagGaussianDistribution):
             return self.action_dist.proba_distribution(mean_actions, self.log_std)
