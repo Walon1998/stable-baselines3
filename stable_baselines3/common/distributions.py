@@ -267,11 +267,11 @@ class MaskableBernoulli(Bernoulli):
         self.mask = None
 
     def entropy(self) -> th.Tensor:
+        entropy = super().entropy()
         assert self.mask is not None
         device = self.logits.device
-        p_log_p = self.logits * self.probs
-        p_log_p = th.where(self.mask, p_log_p, th.tensor(0.0, device=device))
-        return -p_log_p.sum(-1)
+        entropy = th.where(self.mask.squeeze(), entropy, th.tensor(0.0, device=device))
+        return entropy
 
 
 class CategoricalDistribution(Distribution):
