@@ -248,6 +248,32 @@ class SquashedDiagGaussianDistribution(DiagGaussianDistribution):
         return action, log_prob
 
 
+class MaskableCategorical(Categorical):
+    def __init__(self, logits, validate_args):
+        super().__init__(None, logits, validate_args)
+        self.mask = None
+
+    def entropy(self) -> th.Tensor:
+        assert self.mask is not None
+        device = self.logits.device
+        p_log_p = self.logits * self.probs
+        p_log_p = th.where(self.mask, p_log_p, th.tensor(0.0, device=device))
+        return -p_log_p.sum(-1)
+
+
+class MaskableBernoulli(Bernoulli):
+    def __init__(self, logits, validate_args):
+        super().__init__(None, logits.squeeze(), validate_args)
+        self.mask = None
+
+    def entropy(self) -> th.Tensor:
+        assert self.mask is not None
+        device = self.logits.device
+        p_log_p = self.logits * self.probs
+        p_log_p = th.where(self.mask, p_log_p, th.tensor(0.0, device=device))
+        return -p_log_p.sum(-1)
+
+
 class CategoricalDistribution(Distribution):
     """
     Categorical distribution for discrete actions.
@@ -258,7 +284,6 @@ class CategoricalDistribution(Distribution):
     def __init__(self, action_dim: int):
         super(CategoricalDistribution, self).__init__()
         self.action_dim = action_dim
-        self.mask = None
 
     def proba_distribution_net(self, latent_dim: int) -> nn.Module:
         """
@@ -281,12 +306,7 @@ class CategoricalDistribution(Distribution):
         return self.distribution.log_prob(actions)
 
     def entropy(self) -> th.Tensor:
-        assert self.mask is not None
-
-        device = self.distribution.logits.device
-        p_log_p = self.distribution.logits * self.distribution.probs
-        p_log_p = th.where(self.mask, p_log_p, th.tensor(0.0, device=device))
-        return -p_log_p.sum(-1)
+        return self.distribution.entropy()
 
     def sample(self) -> th.Tensor:
         return self.distribution.sample()
@@ -314,6 +334,9 @@ class MultiCategoricalDistribution(Distribution):
 
     def __init__(self, action_dims: List[int]):
         super(MultiCategoricalDistribution, self).__init__()
+        for i in range(len(action_dims)):
+            if action_dims[i] == 2:
+                action_dims[i] = 1
         self.action_dims = action_dims
 
     def proba_distribution_net(self, latent_dim: int) -> nn.Module:
@@ -331,7 +354,14 @@ class MultiCategoricalDistribution(Distribution):
         return action_logits
 
     def proba_distribution(self, action_logits: th.Tensor) -> "MultiCategoricalDistribution":
-        self.distribution = [Categorical(logits=split, validate_args=False) for split in th.split(action_logits, tuple(self.action_dims), dim=1)]
+        self.distribution = []
+        counter = 0
+        for split in th.split(action_logits, tuple(self.action_dims), dim=1):
+            if self.action_dims[counter] == 1:
+                self.distribution.append(MaskableBernoulli(logits=split, validate_args=False))
+            else:
+                self.distribution.append(MaskableCategorical(logits=split, validate_args=False))
+            counter += 1
         return self
 
     def log_prob(self, actions: th.Tensor) -> th.Tensor:
