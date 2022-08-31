@@ -377,7 +377,16 @@ class MultiCategoricalDistribution(Distribution):
         return th.stack([dist.sample() for dist in self.distribution], dim=1)
 
     def mode(self) -> th.Tensor:
-        return th.stack([th.argmax(dist.probs, dim=1) for dist in self.distribution], dim=1)
+        modes = []
+        counter = 0
+        for dist in self.distribution:
+            if self.action_dims[counter] == 1:
+                modes.append(th.round(dist.probs).unsqueeze(0))
+            else:
+                modes.append(th.argmax(dist.probs, dim=1))
+            counter += 1
+        res = th.stack(modes, dim=1)
+        return res
 
     def actions_from_params(self, action_logits: th.Tensor, deterministic: bool = False) -> th.Tensor:
         # Update the proba distribution
