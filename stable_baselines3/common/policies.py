@@ -633,7 +633,7 @@ class ActorCriticPolicy(BasePolicy):
 
         if obs is not None:
             assert obs.size(1) == 159
-            assert mean_actions.size(1) == 19
+            assert mean_actions.size(1) == 22
 
             has_boost = obs[:, 13] > 0.0
             on_ground = obs[:, 14]
@@ -646,9 +646,9 @@ class ActorCriticPolicy(BasePolicy):
             # mask[:, 3:8] = 1.0  # Steer yaw, always possible
             # mask[:, 8:13] = 1.0  # pitch, not on ground but (flip resets, walldashes)
             # mask[:, 13:16] = 1.0  # roll, not on ground
-            # mask[:, 16] = 1.0  # jump, has flip (turtle)
-            # mask[:, 17] = 1.0  # boost, boost > 0
-            # mask[:, 18] = 1.0  # Handbrake, at least one wheel ground (not doable)
+            # mask[:, 16:18] = 1.0  # jump, has flip (turtle)
+            # mask[:, 18:20] = 1.0  # boost, boost > 0
+            # mask[:, 20:22] = 1.0  # Handbrake, at least one wheel ground (not doable)
 
             # mask[:, 0] = on_ground  # throttle -1
             # mask[:, 2] = on_ground  # throttle 1
@@ -656,14 +656,14 @@ class ActorCriticPolicy(BasePolicy):
             in_air = in_air.unsqueeze(1)
             mask[:, 8:16] = in_air  # pitch + roll
 
-            # has_flip = has_flip.unsqueeze(1)
-            mask[:, 16] = has_flip  # has flip
+            has_flip = has_flip.unsqueeze(1)
+            mask[:, 16:18] = has_flip  # has flip
 
-            # has_boost = has_boost.unsqueeze(1)
-            mask[:, 17] = has_boost  # boost
+            has_boost = has_boost.unsqueeze(1)
+            mask[:, 18:20] = has_boost  # boost
 
-            # on_ground = on_ground.unsqueeze(1)
-            mask[:, 18] = on_ground  # Handbrake
+            on_ground = on_ground.unsqueeze(1)
+            mask[:, 20:22] = on_ground  # Handbrake
 
             mean_actions = th.where(mask, mean_actions, self.HUGE_NEG)
 
