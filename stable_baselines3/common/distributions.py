@@ -355,6 +355,8 @@ class MultiCategoricalDistribution(Distribution):
         return action_logits
 
     def proba_distribution(self, action_logits: th.Tensor) -> "MultiCategoricalDistribution":
+        if self.zero is None:
+            self.zero = th.zeros(1, device=action_logits.device)
 
         self.distribution = [MaskableCategorical(logits=split, validate_args=False, ZERO=self.zero) for split in th.split(action_logits, tuple(self.action_dims), dim=1)]
         # counter = 0
