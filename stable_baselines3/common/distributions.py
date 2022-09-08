@@ -338,7 +338,7 @@ class MultiCategoricalDistribution(Distribution):
         #     if action_dims[i] == 2:
         #         action_dims[i] = 1
         self.action_dims = action_dims
-        self.zero = th.zeros(1, device="cuda")
+        self.zero = None
 
     def proba_distribution_net(self, latent_dim: int) -> nn.Module:
         """
