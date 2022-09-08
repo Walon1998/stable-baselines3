@@ -249,15 +249,15 @@ class SquashedDiagGaussianDistribution(DiagGaussianDistribution):
 
 
 class MaskableCategorical(Categorical):
-    def __init__(self, logits, validate_args):
+    def __init__(self, logits, validate_args, ZERO):
         super().__init__(None, logits, validate_args)
         self.mask = None
+        self.zero = ZERO
 
     def entropy(self) -> th.Tensor:
         assert self.mask is not None
-        device = self.logits.device
         p_log_p = self.logits * self.probs
-        p_log_p = th.where(self.mask, p_log_p, th.tensor(0.0, device=device))
+        p_log_p = th.where(self.mask, p_log_p, self.zero)
         return -p_log_p.sum(-1)
 
 
@@ -338,6 +338,7 @@ class MultiCategoricalDistribution(Distribution):
         #     if action_dims[i] == 2:
         #         action_dims[i] = 1
         self.action_dims = action_dims
+        self.zero = th.zeros(1, device="cuda")
 
     def proba_distribution_net(self, latent_dim: int) -> nn.Module:
         """
@@ -354,7 +355,8 @@ class MultiCategoricalDistribution(Distribution):
         return action_logits
 
     def proba_distribution(self, action_logits: th.Tensor) -> "MultiCategoricalDistribution":
-        self.distribution = [MaskableCategorical(logits=split, validate_args=False) for split in th.split(action_logits, tuple(self.action_dims), dim=1)]
+
+        self.distribution = [MaskableCategorical(logits=split, validate_args=False, ZERO=self.zero) for split in th.split(action_logits, tuple(self.action_dims), dim=1)]
         # counter = 0
         # for split in th.split(action_logits, tuple(self.action_dims), dim=1):
         #     if self.action_dims[counter] == 1:
